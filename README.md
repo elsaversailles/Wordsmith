@@ -5,7 +5,7 @@ Wordsmith is a chatbot that uses GPT-4All as its backend model and harnesses pri
 **Here are some of the things that Wordsmith can do:**
 
 * 💡 Answer questions about any topic
-* ✍️ Generate text, translate languages, and write different kinds of creative content
+* ✍️ Generate text and write different kinds of creative content
 * 📈 Learn and improve over time
 
 **Wordsmith is still under development, but it has the potential to revolutionize the way we learn.**
