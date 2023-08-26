@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChatGPT Inspired Chat</title>
+  <title>Wordsmith</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <style>
     body {
@@ -232,7 +232,7 @@
   </div>
 
   <div class="logo-bar">
-    <img src="C:\Users\Downloads\Wordsmith.jpg" alt="Logo"> <!-- Replace with real directory -->
+    <img src="/templates/Wordsmith.jpg" alt="Logo"> <!-- Replace with real directory -->
   </div>
   <div class="title-bar">
     Wordsmith Alpha
@@ -240,60 +240,119 @@
 
   <div class="chat-container chat-right">
     <div class="message bot-message">
-      Hi there! I'm Wordsmith. Feel free to ask anything!
-    </div>
+      <p id="bot-response">
+      </pr>
+    </div>    
   </div>
   <!-- User input row in the 80% section -->
   <div class="user-input-row chat-right">
-    <input type="text" class="input-field" id="user-input" placeholder="Type your message...">
-    <button class="send-button" id="send-button">Send</button>
-  </div>
-  <script>
-    document.getElementById("send-button").addEventListener("click", function() {
-      sendMessage();
+<input type="text" class="input-field" id="user-input" placeholder="Type your message...">
+    <!-- Send Button -->
+<button class="send-button" id="send-button" onclick="delayCode();">Send</button>
+</div>
+
+<script>
+  function delayCode() {
+  // Execute the code first
+  executeCode();
+  answerpart();
+
+  // Wait for 180 seconds before fetching and displaying the string
+  setTimeout(() => {
+    fetchAndDisplayString();
+  }, 180000);
+}
+
+  async function executeCode() {
+    const outputElement = document.getElementById('bot-response');
+
+    const response = await fetch('/execute', {
+      method: 'POST'
     });
 
-    document.getElementById("user-input").addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-        sendMessage();
+    const reader = response.body.getReader();
+    let result = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
       }
-    });
-
-    function sendMessage() {
-      var userInput = document.getElementById("user-input");
-      var userMessage = userInput.value.trim();
-
-      if (userMessage !== "") {
-        var chatContainer = document.querySelector(".chat-container");
-
-        // Add user message
-        var userMessageElement = document.createElement("div");
-        userMessageElement.className = "message user-message";
-        userMessageElement.textContent = userMessage;
-
-        // Add a wrapper for user message and bot reply
-        var messageWrapper = document.createElement("div");
-        messageWrapper.className = "message-wrapper";
-        messageWrapper.appendChild(userMessageElement);
-
-        chatContainer.appendChild(messageWrapper);
-
-        // Simulate a bot reply
-        var botMessageElement = document.createElement("div");
-        botMessageElement.className = "message bot-message";
-        botMessageElement.textContent = "I'm a bot! Your message: " + userMessage;
-
-        // Add bot message to wrapper
-        messageWrapper.appendChild(botMessageElement);
-
-        userInput.value = "";
-
-        // Scroll to the bottom of the chat container
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-
-        userInput.value = "";
-      }
+      result += new TextDecoder().decode(value);
     }
-  </script>
+
+    // Extract the "Answer" part from the result
+    const answerPattern = /> Answer [^\n]*\n(.*)/;
+    const match = result.match(answerPattern);
+    if (match) {
+      const answerPart = match[1].trim();
+
+      // Update the content of the bot-response element with the "Answer" part
+      outputElement.textContent = answerPart;
+      outputElement.scrollTop = outputElement.scrollHeight; // Scroll to the bottom
+    } else {
+      outputElement.textContent = "No answer found.";
+    }
+  }
+  
+  var cleanedResponse = "";  // Define the variable here
+
+async function fetchAndDisplayString() {
+  try {
+    const response = await fetch('/get_bot_responses'); // Change the URL to your API endpoint
+    if (response.ok) {
+      const responseData = await response.text();
+
+      // Clean the text.
+      cleanedResponse = responseData.replace(/[{}\\]+/g, "");
+      cleanedResponse = cleanedResponse.replace(/{}/g, "");
+      cleanedResponse = cleanedResponse.replace(/\\/g, "");
+
+      // Display the text.
+      const botResponseDiv = document.getElementById("bot-response");
+      botResponseDiv.textContent = cleanedResponse;
+   //   console.log(cleanedResponse);
+    } else {
+      console.error('Error fetching data. Status:', response.status);
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+}
+// Call the function and log cleanedResponse
+fetchAndDisplayString().then(() => {
+ // console.log(cleanedResponse);
+});
+
+async function answerpart() {
+  const answerPattern = /> Answer \(took [\d.]+ s.\): (.+)/;
+  const sourcePattern = /> source_documents.*\n/;
+
+  // Find matches for answer and source patterns
+  const answerMatch = cleanedResponse.match(answerPattern);
+  const sourceMatch = cleanedResponse.match(sourcePattern);
+
+  if (answerMatch) {
+    const answerPart = answerMatch[1];
+    document.getElementById("bot-response").textContent = "Answer Part: " + answerPart;
+  } else {
+    document.getElementById("bot-response").textContent = "No answer found.";
+  }
+
+  if (sourceMatch) {
+    const sourceIndex = sourceMatch.index;
+    const filteredResponse = cleanedResponse.substring(0, sourceIndex);
+    document.getElementById("bot-response").textContent = "Filtered Response: " + filteredResponse;
+  }
+}
+
+// Call the function
+answerpart();
+
+    // Call the function to fetch and display JSON data when the page loads
+   // fetchAndDisplayJSON();
+
+</script>
+
 </body>
 </html>
