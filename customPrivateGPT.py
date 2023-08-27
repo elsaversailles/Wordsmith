@@ -59,12 +59,12 @@ def main():
         end = time.time()
 
         # Print and save the result
-        response = f"\n\n> Question:\n{query}\n\n> Answer (took {round(end - start, 2)} s.):\n{answer}\n"
+        response = f"\n\n> Answer (took {round(end - start, 2)} s.):\n{answer}\n"
         response_file.write(response)  # Write the response to the file
 
         # Print the relevant sources used for the answer
-        for document in docs:
-            response_file.write(f"\n> {document.metadata['source']}:\n{document.page_content}\n")
+    #    for document in docs:
+     #       response_file.write(f"\n> {document.metadata['source']}:\n{document.page_content}\n")
 
         # Stop the loop if answer is not empty
         if answer:
