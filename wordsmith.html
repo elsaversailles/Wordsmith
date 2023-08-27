@@ -254,13 +254,32 @@
 <script>
   function delayCode() {
   // Execute the code first
-  executeCode();
+  sendMessage();
   fetchAndDisplayString();
 //  answerpart();
 
   // Wait for 180 seconds before fetching and displaying the string
  
 }
+
+async function sendMessage() {
+        const userInputElement = document.getElementById('user-input');
+        const userMessage = userInputElement.value;
+
+        const response = await fetch('/send_message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: userMessage })
+        });
+
+        // Clear the input field
+        userInputElement.value = '';
+
+        // Call executeCode to get and display bot responses
+        await executeCode();
+    }
 
   async function executeCode() {
     const outputElement = document.getElementById('bot-response');
