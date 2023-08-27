@@ -238,12 +238,18 @@
     Wordsmith Alpha
   </div>
 
-  <div class="chat-container chat-right">
+  <div class="chat-container chat-right" id="chat-container">
     <div class="message bot-message">
-      <p id="bot-response">
-      </pr>
-    </div>    
-  </div>
+        Hi there! I'm Wordsmith. Feel free to ask anything!
+    </div>
+    <div class="message bot-message" style="display: none;">
+        <p id="bot-response"></p>
+    </div>
+    <div class="message user-message" style="display: none;">
+        <p id="user-response"></p>
+    </div>
+</div>
+
   <!-- User input row in the 80% section -->
   <div class="user-input-row chat-right">
 <input type="text" class="input-field" id="user-input" placeholder="Type your message...">
@@ -263,45 +269,73 @@
 }
 
 async function sendMessage() {
-        const userInputElement = document.getElementById('user-input');
-        const userMessage = userInputElement.value;
+    const userInputElement = document.getElementById('user-input');
+    const userMessage = userInputElement.value;
 
-        const response = await fetch('/send_message', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message: userMessage })
-        });
+    // Create a new user message bubble
+    const chatContainer = document.getElementById('chat-container');
+    const userMessageDiv = document.createElement('div');
+    userMessageDiv.classList.add('message', 'user-message');
+    userMessageDiv.innerHTML = `<p>${userMessage}</p>`;
+    chatContainer.appendChild(userMessageDiv);
 
-        // Clear the input field
-        userInputElement.value = '';
+    // Clear the input field
+    userInputElement.value = '';
 
-        // Call executeCode to get and display bot responses
-        await executeCode();
-    }
+    // Display the user's typed message
+    const userResponseDiv = document.getElementById("user-response");
+    userResponseDiv.textContent += `${userMessage}\n`; // Append the new message
+   // userResponseDiv.parentElement.style.display = "block"; // Reveal the user's chat container
 
-  async function executeCode() {
-    const outputElement = document.getElementById('bot-response');
+    const response = await fetch('/send_message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: userMessage })
+    });
+
+    // Call executeCode to get and display bot responses
+    await executeCode();
+}
+
+
+
+ async function executeCode() {
+    const botResponseElement = document.getElementById('bot-response');
+    const botChatContainer = botResponseElement.parentElement;
 
     const response = await fetch('/execute', {
-      method: 'POST'
+        method: 'POST'
     });
 
     const reader = response.body.getReader();
     let result = '';
 
     while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      result += new TextDecoder().decode(value);
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+        result += new TextDecoder().decode(value);
     }
 
     // Extract the "Answer" part from the result
-   
-  }
+    const lines = result.split('\n');
+    const answerLines = lines.filter(line => line.startsWith('Answer:'));
+    const answers = answerLines.map(line => line.substring('Answer:'.length).trim());
+
+    // Update the UI with the extracted answers
+    botResponseElement.textContent = answers.join('\n');
+
+    // Reveal the bot's chat container if there are responses
+    if (answers.length > 0) {
+        botChatContainer.style.display = "block";
+    } else {
+        botChatContainer.style.display = "none";
+    }
+}
+
   
   var cleanedResponse = "";  // Define the variable here
 
@@ -318,6 +352,8 @@ async function fetchAndDisplayString() {
   const response1 = await fetch('/get_bot_responses'); // Change the URL to your API endpoint
   const responseData1 = await response1.text();
 
+  
+
   while (responseData1 < 1) {
     await sleep(1000);
   }
@@ -329,13 +365,13 @@ async function fetchAndDisplayString() {
 
       // Clean the text.
       cleanedResponse = responseData.replace(/[{}\\]+/g, "");
-      cleanedResponse = cleanedResponse.replace(/{}/g, "");
-      cleanedResponse = cleanedResponse.replace(/\\/g, "");
+    
 
       // Display the text.
-      const botResponseDiv = document.getElementById("bot-response");
+      const botResponseDiv = document.getElementById("bot-response"); 
       botResponseDiv.textContent = cleanedResponse;
-   //   console.log(cleanedResponse);
+      botResponseDiv.parentElement.style.display = "block";
+     console.log(cleanedResponse);
     } else {
       console.error('Error fetching data. Status:', response.status);
     }
