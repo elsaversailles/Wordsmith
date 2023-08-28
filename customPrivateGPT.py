@@ -9,9 +9,26 @@ import os
 import argparse
 import time
 
-response_file = open("bot_responses.txt", "a")  # Open the file in append mode
-
 load_dotenv()
+
+def get_new_filename(base_filename):
+    index = 1
+    new_filename = base_filename
+    while os.path.exists(new_filename):
+        index += 1
+        new_filename = f"{base_filename.split('.')[0]}{index}.{base_filename.split('.')[1]}"
+    return new_filename
+
+base_filename = "bot_responses.txt"
+new_filename = get_new_filename(base_filename)
+
+# Create a new response file with an incremented index and blank content
+blank_filename = get_new_filename(base_filename)
+with open(blank_filename, "w") as blank_file:
+    pass
+
+# Open the new response file in append mode
+response_file = open(new_filename, "a")
 
 embeddings_model_name = os.environ.get("EMBEDDINGS_MODEL_NAME")
 persist_directory = os.environ.get('PERSIST_DIRECTORY')
@@ -63,8 +80,8 @@ def main():
         response_file.write(response)  # Write the response to the file
 
         # Print the relevant sources used for the answer
-    #    for document in docs:
-     #       response_file.write(f"\n> {document.metadata['source']}:\n{document.page_content}\n")
+        # for document in docs:
+        #     response_file.write(f"\n> {document.metadata['source']}:\n{document.page_content}\n")
 
         # Stop the loop if answer is not empty
         if answer:
