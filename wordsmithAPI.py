@@ -1,3 +1,5 @@
+#Wordsmith API
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -9,14 +11,15 @@ import os
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
-app.mount("/templates", StaticFiles(directory="templates"), name="static")  # serve pics
+app.mount("/templates", StaticFiles(directory="templates"), name="static")  #Serves static image from templates folder
 
-
-@app.get("/", response_class=HTMLResponse)
+#response_class=HTMLResponse from index.html
+@app.get("/", response_class=HTMLResponse) 
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.post("/send_message")
+#Sends user query and saves it temporarily in hi.txt
+@app.post("/send_message") 
 def send_message(message: dict):
     user_message = message.get('message')
 
@@ -29,7 +32,9 @@ def send_message(message: dict):
             return JSONResponse(content={"error": f"Error saving message: {str(e)}"}, status_code=500)
     else:
         raise HTTPException(status_code=400, detail="No message provided")
+    
 
+#Executes privateGPT.py and returns bot response
 @app.post("/execute")
 def execute_code():
     process = subprocess.Popen(
@@ -54,7 +59,7 @@ def execute_code():
 
     return StreamingResponse(generate())
 
-
+#Returns bot response after executing privateGPT.py and saving it in bot_responsesN.txt
 @app.get("/get_bot_responses")
 def get_bot_response_with_largest_number():
     try:
