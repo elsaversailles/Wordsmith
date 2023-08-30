@@ -1,3 +1,4 @@
+<!-- Wordsmith web frontend -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -254,17 +255,14 @@
   <div class="user-input-row chat-right">
 <input type="text" class="input-field" id="user-input" placeholder="Type your message...">
     <!-- Send Button -->
-<button class="send-button" id="send-button" onclick="delayCode();">Send</button>
+<button class="send-button" id="send-button" onclick="runCode();">Send</button>
 </div>
 
 <script>
-  function delayCode() {
-  // Execute the code first
+  function runCode() {
   sendMessage();
   fetchAndDisplayString();
-//  answerpart();
 
-  // Wait for 180 seconds before fetching and displaying the string
  
 }
 
@@ -285,7 +283,6 @@ async function sendMessage() {
     // Display the user's typed message
     const userResponseDiv = document.getElementById("user-response");
     userResponseDiv.textContent += `${userMessage}\n`; // Append the new message
-   // userResponseDiv.parentElement.style.display = "block"; // Reveal the user's chat container
 
     const response = await fetch('/send_message', {
         method: 'POST',
@@ -337,7 +334,7 @@ async function sendMessage() {
 }
 
   
-  var cleanedResponse = "";  // Define the variable here
+  var cleanedResponse = "";  // Define public variable here
 
   const sleep = (delayTime) => {
   return new Promise((resolve, reject) => {
@@ -353,7 +350,7 @@ setTimeout(() => {
 
 async function fetchAndDisplayString() {
   // Wait for the response of /get_bot_responses to be ready
-  const response1 = await fetch('/get_bot_responses'); // Change the URL to your API endpoint
+  const response1 = await fetch('/get_bot_responses'); // Change the URL to API endpoint
   const responseData1 = await response1.text();
 
 
@@ -363,7 +360,7 @@ async function fetchAndDisplayString() {
 
   while (true) {
     try {
-      const response = await fetch('/get_bot_responses'); // Change the URL to your API endpoint
+      const response = await fetch('/get_bot_responses'); // Change the URL to API endpoint
       if (response.ok) {
         const responseData = await response.text();
 
@@ -400,12 +397,6 @@ async function fetchAndDisplayString() {
     }
   }
 }
-
-
-
-
-    // Call the function to fetch and display JSON data when the page loads
-   // fetchAndDisplayJSON();
 
 </script>
 
