@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#This is a fork of privateGPT.py from privateGPT project
 from dotenv import load_dotenv
 from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceEmbeddings
@@ -11,6 +12,7 @@ import time
 
 load_dotenv()
 
+# Creates a new filename with an incremented index for the API to serve
 def get_new_filename(base_filename):
     index = 1
     new_filename = base_filename
@@ -21,6 +23,9 @@ def get_new_filename(base_filename):
 
 base_filename = "bot_responses.txt"
 new_filename = get_new_filename(base_filename)
+
+# Change directory to /responses/bot_responses.txt
+#os.chdir("/workspaces/GPT-Helper/privateGPT/responses/")
 
 # Create a new response file with an incremented index and blank content
 blank_filename = get_new_filename(base_filename)
@@ -79,11 +84,6 @@ def main():
         response = f"\n\n> Answer (took {round(end - start, 2)} s.):\n{answer}\n"
         response_file.write(response)  # Write the response to the file
 
-        # Print the relevant sources used for the answer
-        # for document in docs:
-        #     response_file.write(f"\n> {document.metadata['source']}:\n{document.page_content}\n")
-
-        # Stop the loop if answer is not empty
         if answer:
             break
 
