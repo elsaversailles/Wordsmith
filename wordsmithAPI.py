@@ -1,13 +1,16 @@
 #Wordsmith API
 
+from starlette.concurrency import run_in_threadpool
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import PlainTextResponse
+from fastapi import FastAPI, BackgroundTasks
 import subprocess
 import asyncio
 import os
+import time
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -36,7 +39,11 @@ def send_message(message: dict):
 
 #Executes privateGPT.py and returns bot response
 @app.post("/execute")
-def execute_code():
+async def execute_code(background_tasks: BackgroundTasks):
+    background_tasks.add_task(long_running_process)
+    return {"message": "Process started"}
+
+def long_running_process():
     process = subprocess.Popen(
         ['python', '/workspaces/GPT-Helper/privateGPT/privateGPT.py'],
         stdout=subprocess.PIPE,
@@ -45,19 +52,15 @@ def execute_code():
         universal_newlines=True
     )
 
-    async def generate():
-        while process.poll() is None:
-            line = process.stdout.readline()
-            if not line:
-                await asyncio.sleep(0.1)  # Wait if no data is available
-                continue
-            yield line
+    while process.poll() is None:
+        line = process.stdout.readline()
+        if not line:
+            time.sleep(0.1)  # Wait if no data is available
+            continue
 
-        # Process has exited, yield any remaining output
-        for line in process.stdout:
-            yield line
-
-    return StreamingResponse(generate())
+    # Process has exited, yield any remaining output
+    for line in process.stdout:
+        pass  # Do nothing with the output
 
 #Returns bot response after executing privateGPT.py and saving it in bot_responsesN.txt
 @app.get("/get_bot_responses")
@@ -88,3 +91,5 @@ def get_bot_response_with_largest_number():
             
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+        
