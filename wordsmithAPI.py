@@ -1,20 +1,41 @@
 #Wordsmith API
-
 from starlette.concurrency import run_in_threadpool
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
+from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, Request, BackgroundTasks
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import PlainTextResponse
-from fastapi import FastAPI, BackgroundTasks
 import subprocess
 import asyncio
 import os
 import time
+import psutil
+import shutil
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
-app.mount("/templates", StaticFiles(directory="templates"), name="static")  #Serves static image from templates folder
+app.mount("/templates", StaticFiles(directory="templates"), name="static")  # Serves static image from templates folder
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def read_dashboard(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+
+@app.get("/fileUpload", response_class=HTMLResponse)
+async def read_dashboard(request: Request):
+    return templates.TemplateResponse("fileupload.html", {"request": request})
+
+
+@app.get("/help", response_class=HTMLResponse)
+async def read_dashboard(request: Request):
+    return templates.TemplateResponse("help.html", {"request": request})
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    with open(f'/workspaces/GPT-Helper/privateGPT/source_documents/{file.filename}', 'wb') as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {"filename": file.filename}
 
 #response_class=HTMLResponse from index.html
 @app.get("/", response_class=HTMLResponse) 
@@ -92,4 +113,35 @@ def get_bot_response_with_largest_number():
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
-        
+@app.get("/cpu-usage")
+async def get_cpu_usage():
+    cpu_percent = psutil.cpu_percent(interval=1)  # Query CPU usage for 1 second
+    return {"cpu_usage": cpu_percent}  
+
+def bytes_to_gb(bytes_value):
+    return round(bytes_value / (1024**3), 2)  # Convert to GB and round to 2 decimal places
+
+@app.get("/ram-usage")
+async def get_ram_usage():
+    virtual_memory = psutil.virtual_memory()
+    ram_usage = {
+        "total": bytes_to_gb(virtual_memory.total),
+        "available": bytes_to_gb(virtual_memory.available),
+        "used": bytes_to_gb(virtual_memory.used),
+        "free": bytes_to_gb(virtual_memory.free),
+    }
+    return {"ram_usage": ram_usage}
+
+def bytes_to_gb(bytes_value):
+    return round(bytes_value / (1024**3), 2)  # Convert to GB and round to 2 decimal places
+
+@app.get("/free-disk-space")
+async def get_free_disk_space():
+    partitions = psutil.disk_partitions()
+    free_space_gb = {}
+    
+    for partition in partitions:
+        usage = psutil.disk_usage(partition.mountpoint)
+        free_space_gb[partition.device] = bytes_to_gb(usage.free)
+    
+    return {"free_disk_space": free_space_gb}
